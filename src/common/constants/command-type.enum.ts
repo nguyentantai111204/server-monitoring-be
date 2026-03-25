@@ -1,0 +1,5 @@
+export enum CommandType {
+    RESTART_SERVICE = 'RESTART_SERVICE',
+    SHELL_CMD = 'SHELL_CMD',
+    UPDATE_AGENT = 'UPDATE_AGENT',
+}
