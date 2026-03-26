@@ -59,7 +59,7 @@ EOF
 # 5. Start service
 echo "Starting and enabling service..."
 sudo systemctl daemon-reload
-sudo systemctl start server-monitor-agent
+sudo systemctl restart server-monitor-agent
 sudo systemctl enable server-monitor-agent
 
 echo "--- Installation Complete ---"

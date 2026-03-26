@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Between, Repository } from 'typeorm';
 import { Metric } from './entities/metric.entity';
@@ -13,6 +13,8 @@ import { Server } from '../servers/entities/server.entity';
 
 @Injectable()
 export class MetricsService {
+    private readonly logger = new Logger(MetricsService.name);
+
     constructor(
         @InjectRepository(Metric)
         private readonly metricRepository: Repository<Metric>,
@@ -31,7 +33,8 @@ export class MetricsService {
             throw new UnauthorizedException('Invalid agent token');
         }
 
-        // Update server status and heartbeat using the new service method
+        this.logger.log(`Received metrics from server: ${server.name} [${server.ipAddress}]`);
+
         await this.serversService.updateStatus(server, ServerStatus.ONLINE);
 
         const metric = this.metricRepository.create({
@@ -45,7 +48,6 @@ export class MetricsService {
 
         const savedMetric = await this.metricRepository.save(metric);
 
-        // Check for alerts asynchronously
         this.checkAlerts(server, pushMetricDto).catch((err) =>
             console.error('Error checking alerts:', err),
         );

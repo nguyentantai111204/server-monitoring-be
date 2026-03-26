@@ -5,7 +5,6 @@ const http = require('http');
 const https = require('https');
 const { execSync } = require('child_process');
 
-// ==================== Parse Arguments ====================
 const args = process.argv.slice(2);
 const config = { agentToken: '', backendUrl: '', metricInterval: 30000, pollInterval: 10000 };
 
@@ -21,7 +20,6 @@ if (!config.agentToken || !config.backendUrl) {
 
 console.log(`[Agent] Started | Token: ${config.agentToken} | Backend: ${config.backendUrl}`);
 
-// ==================== Metric Collection ====================
 
 let prevCpuTimes = null;
 
@@ -143,7 +141,7 @@ async function pushMetrics() {
             console.error(`[Agent] Failed to push metrics: ${res.status} | ${res.body}`);
         }
     } catch (err) {
-        console.error(`[Agent] Network error pushing metrics: ${err.message}`);
+        console.error(`[Agent] Network error pushing metrics to ${config.backendUrl}: ${err.message}`);
     }
 }
 
@@ -157,7 +155,7 @@ async function pollCommands() {
             }
         }
     } catch (err) {
-        console.error(`[Agent] Network error polling commands: ${err.message}`);
+        console.error(`[Agent] Network error polling commands from ${config.backendUrl}: ${err.message}`);
     }
 }
 
@@ -175,7 +173,7 @@ async function executeCommand(command) {
         await request('PUT', `${config.backendUrl}/api/commands/agent/${command.id}/result`, {}, { status, resultLog });
         console.log(`[Agent] Command [${command.id}] result submitted: ${status}`);
     } catch (err) {
-        console.error(`[Agent] Failed to submit command result: ${err.message}`);
+        console.error(`[Agent] Failed to submit command result to ${config.backendUrl}: ${err.message}`);
     }
 }
 
