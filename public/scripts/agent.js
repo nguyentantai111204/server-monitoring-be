@@ -67,7 +67,7 @@ function getDiskUsagePercent() {
         // Linux/macOS - Read from df
         const output = execSync("df / --output=pcent 2>/dev/null | tail -1").toString().trim();
         return Math.min(100, Math.max(0, parseFloat(output.replace('%', ''))));
-    } catch {
+    } catch (err) {
         return 0;
     }
 }
@@ -87,7 +87,7 @@ function getNetworkBytes() {
             }
         }
         return { networkIn, networkOut };
-    } catch {
+    } catch (err) {
         return { networkIn: 0, networkOut: 0 };
     }
 }
