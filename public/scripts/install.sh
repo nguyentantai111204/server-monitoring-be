@@ -22,20 +22,21 @@ fi
 
 echo "--- Installing Server Monitor Agent ---"
 
-# 1. Install Node.js if missing
-if ! command -v node &> /dev/null; then
-    echo "Node.js not found. Installing Node.js..."
-    curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
-    sudo apt-get install -y nodejs
+# 1. Install python3 if missing
+if ! command -v python3 &> /dev/null; then
+    echo "Python3 not found. Installing Python3..."
+    sudo apt-get update
+    sudo apt-get install -y python3
 fi
 
 # 2. Setup directory
 sudo mkdir -p $INSTALL_DIR
 sudo chown $USER:$USER $INSTALL_DIR
 
-# 3. Download agent.js
-echo "Downloading agent.js from $BACKEND_URL/scripts/agent.js..."
-curl -sSL "$BACKEND_URL/scripts/agent.js" -o "$INSTALL_DIR/agent.js"
+# 3. Download agent.py
+echo "Downloading agent.py from $BACKEND_URL/scripts/agent.py..."
+curl -sSL "$BACKEND_URL/scripts/agent.py" -o "$INSTALL_DIR/agent.py"
+chmod +x "$INSTALL_DIR/agent.py"
 
 # 4. Create systemd service
 echo "Creating systemd service..."
@@ -48,7 +49,7 @@ After=network.target
 Type=simple
 User=$USER
 WorkingDirectory=$INSTALL_DIR
-ExecStart=/usr/bin/node agent.js -t $AGENT_TOKEN -u $BACKEND_URL
+ExecStart=/usr/bin/python3 agent.py -t $AGENT_TOKEN -u $BACKEND_URL
 Restart=always
 RestartSec=10
 
