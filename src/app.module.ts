@@ -5,6 +5,7 @@ import { ServeStaticModule } from '@nestjs/serve-static';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { join } from 'path';
 import { APP_FILTER, APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 
 import configs from './config';
 import { HttpExceptionFilter } from './common/filters/http-exception.filter';
@@ -53,6 +54,10 @@ import { TelegramModule } from './providers/telegram/telegram.module';
     AlertsModule,
 
     TelegramModule,
+    ThrottlerModule.forRoot([{
+      ttl: 60000,
+      limit: 100,
+    }]),
   ],
   providers: [
     {
@@ -66,6 +71,10 @@ import { TelegramModule } from './providers/telegram/telegram.module';
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
     {
       provide: APP_INTERCEPTOR,

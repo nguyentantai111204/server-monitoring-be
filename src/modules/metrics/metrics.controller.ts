@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Headers, Ip, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiSecurity, ApiTags } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { Public } from '../../common/decorators/public.decorator';
 import { PushMetricDto } from './dto/push-metric.dto';
 import { QueryMetricDto } from './dto/query-metric.dto';
@@ -12,6 +13,7 @@ export class MetricsController {
 
     @Public()
     @ApiSecurity('Agent-Token')
+    @Throttle({ default: { limit: 10, ttl: 60000 } })
     @Post('push')
     pushMetric(
         @Headers('x-agent-token') agentToken: string,
