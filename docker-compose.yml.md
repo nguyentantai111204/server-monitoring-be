@@ -9,8 +9,8 @@ services:
     restart: always
     environment:
       - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=Admin@123
-      - POSTGRES_DB=server_monitoring
+      - POSTGRES_PASSWORD=PASSS
+      - POSTGRES_DB=postgres
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
@@ -24,8 +24,8 @@ services:
       - DB_HOST=db
       - DB_PORT=5432
       - DB_USERNAME=postgres
-      - DB_PASSWORD=Admin@123
-      - DB_NAME=server_monitoring
+      - DB_PASSWORD=PASSS
+      - DB_NAME=postgres
       - BACKEND_URL=http://ubuntu-server-management.duckdns.org
     depends_on:
       - db
