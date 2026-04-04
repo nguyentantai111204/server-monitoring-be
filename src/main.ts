@@ -6,6 +6,9 @@ import { AppModule } from './app.module';
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
 
+  // Trust proxy for Nginx
+  (app as any).set('trust proxy', 1);
+
   app.setGlobalPrefix('api');
 
   app.useGlobalPipes(

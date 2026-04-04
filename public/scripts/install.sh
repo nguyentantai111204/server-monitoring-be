@@ -16,7 +16,7 @@ while [[ "$#" -gt 0 ]]; do
 done
 
 if [ -z "$AGENT_TOKEN" ] || [ -z "$BACKEND_URL" ]; then
-    echo "Usage: sudo bash install.sh -t <token> -u <url>"
+    echo "Usage: sudo bash install.sh -t <token> -u http://ubuntu-server-management.duckdns.org"
     exit 1
 fi
 

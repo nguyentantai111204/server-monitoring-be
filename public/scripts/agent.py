@@ -262,7 +262,7 @@ def execute_command(command):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Server Monitor Agent")
     parser.add_argument("-t", "--token", required=True, help="Agent Token")
-    parser.add_argument("-u", "--url", required=True, help="Backend URL (e.g. http://103.163.214.80:3000)")
+    parser.add_argument("-u", "--url", required=True, help="Backend URL (e.g. http://ubuntu-server-management.duckdns.org)")
     args = parser.parse_args()
 
     AGENT_TOKEN = args.token
