@@ -5,6 +5,7 @@ import json
 import time
 import argparse
 import subprocess
+import socket
 import urllib.request
 from urllib.error import HTTPError, URLError
 
@@ -138,6 +139,18 @@ def get_network_bytes():
         print(f"[Agent] Error reading Network usage: {e}")
         return {"networkIn": 0, "networkOut": 0}
 
+def get_local_ip():
+    """Gets the primary local IP address."""
+    try:
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        # 8.8.8.8 is a dummy address, no packet is sent
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except Exception:
+        return None
+
 # ==================== HTTP Helper ====================
 
 def make_request(method, endpoint, payload=None):
@@ -177,7 +190,8 @@ def push_metrics():
         "ramUsage": get_ram_usage_percent(),
         "diskUsage": get_disk_usage_percent(),
         "networkIn": net_st["networkIn"],
-        "networkOut": net_st["networkOut"]
+        "networkOut": net_st["networkOut"],
+        "ipAddress": get_local_ip()
     }
     
     try:

@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, Max, Min } from 'class-validator';
+import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
 
 export class PushMetricDto {
     @ApiProperty({ example: 45.5, description: 'Phần trăm CPU sử dụng (0-100)' })
@@ -31,4 +31,9 @@ export class PushMetricDto {
     @IsNumber()
     @Min(0)
     networkOut?: number;
+
+    @ApiPropertyOptional({ example: '192.168.1.100', description: 'Địa chỉ IP nội bộ của server' })
+    @IsOptional()
+    @IsString()
+    ipAddress?: string;
 }

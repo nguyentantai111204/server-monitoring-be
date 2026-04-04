@@ -34,10 +34,13 @@ export class MetricsService {
             throw new UnauthorizedException('Invalid agent token');
         }
 
+        // Priority: 1. Agent reported IP (internal) | 2. Request source IP (public/NAT)
+        const detectedIp = pushMetricDto.ipAddress || ip;
+
         // Auto-detect and update IP if not set or changed
-        if (ip && (!server.ipAddress || server.ipAddress !== ip)) {
-            this.logger.log(`Auto-detected/Updated IP for server ${server.name}: ${ip}`);
-            server.ipAddress = ip;
+        if (detectedIp && (!server.ipAddress || server.ipAddress !== detectedIp)) {
+            this.logger.log(`Auto-detected/Updated IP for server ${server.name}: ${detectedIp}`);
+            server.ipAddress = detectedIp;
             // updateStatus will save the new IP and update heartbeat/status
             await this.serversService.updateStatus(server, ServerStatus.ONLINE);
         } else {
