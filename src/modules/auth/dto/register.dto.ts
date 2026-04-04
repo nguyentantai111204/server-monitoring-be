@@ -18,12 +18,4 @@ export class RegisterDto {
     @IsNotEmpty()
     fullName: string;
 
-    @ApiPropertyOptional({
-        example: UserRole.ADMIN,
-        enum: UserRole,
-        description: 'Vai trò người dùng (mặc định: ADMIN)',
-    })
-    @IsOptional()
-    @IsEnum(UserRole)
-    role?: UserRole;
 }

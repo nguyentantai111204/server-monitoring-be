@@ -34,7 +34,7 @@ export class AuthService {
             username: registerDto.username,
             password: registerDto.password,
             fullName: registerDto.fullName,
-            role: registerDto.role || UserRole.VIEWER,
+            role: UserRole.VIEWER,
         });
 
         const { passwordHash: _pw, ...result } = user;
