@@ -1,4 +1,5 @@
-import { Body, Controller, Headers, Post, UseGuards } from '@nestjs/common';
+import { Body, Controller, Headers, Post, UseGuards, Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
@@ -12,9 +13,30 @@ import { RegisterDto } from './dto/register.dto';
 export class AuthController {
     constructor(private readonly authService: AuthService) { }
 
+    private setAuthCookies(res: Response, accessToken: string, refreshToken: string) {
+        res.cookie('accessToken', accessToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 15 * 60 * 1000, // 15 mins
+        });
+
+        res.cookie('refreshToken', refreshToken, {
+            httpOnly: true,
+            secure: true,
+            sameSite: 'none',
+            maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+        });
+    }
+
+    private clearAuthCookies(res: Response) {
+        res.clearCookie('accessToken', { httpOnly: true, secure: true, sameSite: 'none' });
+        res.clearCookie('refreshToken', { httpOnly: true, secure: true, sameSite: 'none' });
+    }
+
     @Public()
     @Post('register')
-    register(@Body() registerDto: RegisterDto) {
+    async register(@Body() registerDto: RegisterDto) {
         return this.authService.register(registerDto);
     }
 
@@ -25,30 +47,49 @@ export class AuthController {
         required: false,
         description: 'Thông tin thiết bị (mặc định trình duyệt tự gửi)',
     })
-    login(
+    async login(
         @Body() loginDto: LoginDto,
+        @Res({ passthrough: true }) res: Response,
         @Headers('user-agent') userAgent?: string,
     ) {
-        return this.authService.login(loginDto, userAgent || 'Unknown Device');
+        const tokens = await this.authService.login(loginDto, userAgent || 'Unknown Device');
+        this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+        return tokens;
     }
 
     @Public()
     @Post('refresh')
-    refreshTokens(@Body('refreshToken') refreshToken: string) {
-        return this.authService.refreshTokens(refreshToken);
+    async refreshTokens(
+        @Body('refreshToken') bodyToken: string,
+        @Res({ passthrough: true }) res: Response,
+        @Headers('cookie') cookies?: any
+    ) {
+        const tokens = await this.authService.refreshTokens(bodyToken);
+        this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
+        return tokens;
     }
 
     @ApiBearerAuth('JWT')
     @Post('logout')
     @UseGuards(JwtAuthGuard)
-    logout(@Body('refreshToken') refreshToken: string) {
-        return this.authService.logout(refreshToken);
+    async logout(
+        @Body('refreshToken') bodyToken: string,
+        @Res({ passthrough: true }) res: Response
+    ) {
+        await this.authService.logout(bodyToken);
+        this.clearAuthCookies(res);
+        return { message: 'Logged out successfully' };
     }
 
     @ApiBearerAuth('JWT')
     @Post('logout-all')
     @UseGuards(JwtAuthGuard)
-    logoutAll(@GetUser() user: { id: string }) {
-        return this.authService.revokeAllUserTokens(user.id);
+    async logoutAll(
+        @GetUser() user: { id: string },
+        @Res({ passthrough: true }) res: Response
+    ) {
+        await this.authService.revokeAllUserTokens(user.id);
+        this.clearAuthCookies(res);
+        return { message: 'Logged out of all devices' };
     }
 }

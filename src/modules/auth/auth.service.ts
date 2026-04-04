@@ -61,6 +61,18 @@ export class AuthService {
     }
 
     async refreshTokens(refreshTokenStr: string): Promise<TokenPair> {
+        try {
+            const refreshSecret =
+                this.configService.get<string>('jwt.refreshSecret') ||
+                'super-refresh-secret-change-in-production';
+            
+            await this.jwtService.verifyAsync(refreshTokenStr, {
+                secret: refreshSecret,
+            });
+        } catch (error) {
+            throw new UnauthorizedException('Invalid or expired refresh token signature');
+        }
+
         const tokenRecord = await this.refreshTokenRepository.findOne({
             where: { token: refreshTokenStr, isRevoked: false },
             relations: ['user'],
@@ -74,7 +86,7 @@ export class AuthService {
         await this.refreshTokenRepository.save(tokenRecord);
 
         const { user } = tokenRecord;
-        return this.generateTokens(user.id, user.email, user.role);
+        return this.generateTokens(user.id, user.email, user.role, tokenRecord.userAgent);
     }
 
     async logout(refreshTokenStr: string): Promise<void> {
