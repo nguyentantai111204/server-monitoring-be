@@ -30,7 +30,7 @@ import { TelegramModule } from './providers/telegram/telegram.module';
     ScheduleModule.forRoot(),
     ServeStaticModule.forRoot({
       rootPath: join(process.cwd(), 'public'),
-      exclude: ['/api*'],
+      exclude: ['/api/(.*)'],
     }),
 
     TypeOrmModule.forRoot({

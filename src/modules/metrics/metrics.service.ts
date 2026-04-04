@@ -26,6 +26,7 @@ export class MetricsService {
     async pushMetric(
         agentToken: string,
         pushMetricDto: PushMetricDto,
+        ip?: string,
     ): Promise<Metric> {
         const server = await this.serversService.findByAgentToken(agentToken);
 
@@ -33,9 +34,16 @@ export class MetricsService {
             throw new UnauthorizedException('Invalid agent token');
         }
 
-        this.logger.log(`Received metrics from server: ${server.name} [${server.ipAddress}]`);
-
-        await this.serversService.updateStatus(server, ServerStatus.ONLINE);
+        // Auto-detect and update IP if not set or changed
+        if (ip && (!server.ipAddress || server.ipAddress !== ip)) {
+            this.logger.log(`Auto-detected/Updated IP for server ${server.name}: ${ip}`);
+            server.ipAddress = ip;
+            // updateStatus will save the new IP and update heartbeat/status
+            await this.serversService.updateStatus(server, ServerStatus.ONLINE);
+        } else {
+            this.logger.log(`Received metrics from server: ${server.name} [${server.ipAddress}]`);
+            await this.serversService.updateStatus(server, ServerStatus.ONLINE);
+        }
 
         const metric = this.metricRepository.create({
             serverId: server.id,

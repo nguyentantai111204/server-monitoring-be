@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Headers, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Headers, Ip, Param, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { PushMetricDto } from './dto/push-metric.dto';
@@ -16,8 +16,9 @@ export class MetricsController {
     pushMetric(
         @Headers('x-agent-token') agentToken: string,
         @Body() pushMetricDto: PushMetricDto,
+        @Ip() ip: string,
     ) {
-        return this.metricsService.pushMetric(agentToken, pushMetricDto);
+        return this.metricsService.pushMetric(agentToken, pushMetricDto, ip);
     }
 
     @ApiBearerAuth('JWT')

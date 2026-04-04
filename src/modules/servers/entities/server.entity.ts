@@ -15,7 +15,7 @@ export class Server extends BaseEntity {
     @Column({ length: 255 })
     name: string;
 
-    @Column({ name: 'ip_address', length: 100 })
+    @Column({ name: 'ip_address', length: 100, nullable: true })
     ipAddress: string;
 
     @Column({ name: 'agent_token', unique: true })
