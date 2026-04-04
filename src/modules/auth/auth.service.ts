@@ -31,7 +31,7 @@ export class AuthService {
 
     async register(registerDto: RegisterDto) {
         const user = await this.usersService.create({
-            username: registerDto.username,
+            email: registerDto.email,
             password: registerDto.password,
             fullName: registerDto.fullName,
             role: UserRole.VIEWER,
@@ -42,7 +42,7 @@ export class AuthService {
     }
 
     async login(loginDto: LoginDto, userAgent?: string): Promise<TokenPair> {
-        const user = await this.usersService.findByUsername(loginDto.username);
+        const user = await this.usersService.findByEmail(loginDto.email);
 
         if (!user) {
             throw new UnauthorizedException('Invalid credentials');
@@ -57,7 +57,7 @@ export class AuthService {
             throw new UnauthorizedException('Invalid credentials');
         }
 
-        return this.generateTokens(user.id, user.username, user.role, userAgent);
+        return this.generateTokens(user.id, user.email, user.role, userAgent);
     }
 
     async refreshTokens(refreshTokenStr: string): Promise<TokenPair> {
@@ -74,7 +74,7 @@ export class AuthService {
         await this.refreshTokenRepository.save(tokenRecord);
 
         const { user } = tokenRecord;
-        return this.generateTokens(user.id, user.username, user.role);
+        return this.generateTokens(user.id, user.email, user.role);
     }
 
     async logout(refreshTokenStr: string): Promise<void> {
@@ -99,11 +99,11 @@ export class AuthService {
 
     private async generateTokens(
         userId: string,
-        username: string,
+        email: string,
         role: string,
         userAgent?: string,
     ): Promise<TokenPair> {
-        const payload = { sub: userId, username, role };
+        const payload = { sub: userId, email, role };
 
         const jwtSecret =
             this.configService.get<string>('jwt.secret') ||

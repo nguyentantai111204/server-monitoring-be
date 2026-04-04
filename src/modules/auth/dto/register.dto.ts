@@ -1,12 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsEnum, IsNotEmpty, IsOptional, IsString, MinLength } from 'class-validator';
 import { UserRole } from '../../../common/constants/user-role.enum';
 
 export class RegisterDto {
-    @ApiProperty({ example: 'tantai', description: 'Tên đăng nhập (phải unique)' })
-    @IsString()
+    @ApiProperty({ example: 'admin@domain.com', description: 'Địa chỉ email' })
+    @IsEmail()
     @IsNotEmpty()
-    username: string;
+    email: string;
 
     @ApiProperty({ example: '123456', description: 'Mật khẩu (tối thiểu 6 ký tự)' })
     @IsString()

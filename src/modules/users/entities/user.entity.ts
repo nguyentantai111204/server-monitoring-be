@@ -5,8 +5,8 @@ import { UserRole } from '../../../common/constants/user-role.enum';
 
 @Entity('users')
 export class User extends BaseEntity {
-    @Column({ unique: true, length: 100 })
-    username: string;
+    @Column({ unique: true, length: 150 })
+    email: string;
 
     @Exclude()
     @Column({ name: 'password_hash', type: 'text' })
