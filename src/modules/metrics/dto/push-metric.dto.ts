@@ -1,5 +1,28 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsNumber, IsOptional, IsString, Max, Min } from 'class-validator';
+import { IsArray, IsNumber, IsOptional, IsString, Max, Min, ValidateNested } from 'class-validator';
+import { Type } from 'class-transformer';
+
+export class ProcessInfoDto {
+    @ApiProperty({ example: 1234 })
+    @IsNumber()
+    pid: number;
+
+    @ApiProperty({ example: 'root' })
+    @IsString()
+    user: string;
+
+    @ApiProperty({ example: 12.5 })
+    @IsNumber()
+    cpu: number;
+
+    @ApiProperty({ example: 3.2 })
+    @IsNumber()
+    mem: number;
+
+    @ApiProperty({ example: 'node' })
+    @IsString()
+    command: string;
+}
 
 export class PushMetricDto {
     @ApiProperty({ example: 45.5, description: 'Phần trăm CPU sử dụng (0-100)' })
@@ -36,4 +59,11 @@ export class PushMetricDto {
     @IsOptional()
     @IsString()
     ipAddress?: string;
+
+    @ApiPropertyOptional({ description: 'Top processes by CPU usage' })
+    @IsOptional()
+    @IsArray()
+    @ValidateNested({ each: true })
+    @Type(() => ProcessInfoDto)
+    topProcesses?: ProcessInfoDto[];
 }

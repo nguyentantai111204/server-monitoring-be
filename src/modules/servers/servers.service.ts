@@ -112,4 +112,11 @@ export class ServersService {
         server.lastHeartbeat = new Date();
         return this.serverRepository.save(server);
     }
+
+    async updateTopProcesses(
+        serverId: string,
+        topProcesses: Server['topProcesses'],
+    ): Promise<void> {
+        await this.serverRepository.update(serverId, { topProcesses });
+    }
 }

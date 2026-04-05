@@ -151,6 +151,38 @@ def get_local_ip():
     except Exception:
         return None
 
+def get_top_processes():
+    """Returns the top 15 processes sorted by CPU usage."""
+    try:
+        if sys.platform == 'win32':
+            return []
+        result = subprocess.run(
+            ['ps', '-eo', 'pid,user,%cpu,%mem,comm', '--sort=-%cpu'],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=5,
+        )
+        lines = result.stdout.strip().splitlines()
+        processes = []
+        for line in lines[1:16]:  # skip header, take top 15
+            parts = line.split(None, 4)
+            if len(parts) == 5:
+                try:
+                    processes.append({
+                        "pid": int(parts[0]),
+                        "user": parts[1],
+                        "cpu": float(parts[2]),
+                        "mem": float(parts[3]),
+                        "command": parts[4].strip(),
+                    })
+                except ValueError:
+                    continue
+        return processes
+    except Exception as e:
+        print(f"[Agent] Error reading processes: {e}")
+        return []
+
 # ==================== HTTP Helper ====================
 
 def make_request(method, endpoint, payload=None):
@@ -191,13 +223,14 @@ def push_metrics():
         "diskUsage": get_disk_usage_percent(),
         "networkIn": net_st["networkIn"],
         "networkOut": net_st["networkOut"],
-        "ipAddress": get_local_ip()
+        "ipAddress": get_local_ip(),
+        "topProcesses": get_top_processes(),
     }
     
     try:
         res = make_request("POST", "/api/metrics/push", payload)
         if res["status"] == 201:
-            print(f"[Agent] Metrics pushed | CPU: {payload['cpuUsage']}% | RAM: {payload['ramUsage']}% | Disk: {payload['diskUsage']}%")
+            print(f"[Agent] Metrics pushed | CPU: {payload['cpuUsage']}% | RAM: {payload['ramUsage']}% | Disk: {payload['diskUsage']}% | Processes: {len(payload['topProcesses'])}")
         else:
             print(f"[Agent] Failed to push metrics: {res['status']} | {res['body']}")
     except Exception as e:
@@ -219,12 +252,18 @@ def poll_commands():
         pass # Suppress polling errors to avoid log spam, mostly likely timeout/unreachable
 
 def execute_command(command):
-    """Executes a bash command and returns result."""
+    """Executes a command and returns result."""
     cmd_id = command.get("id")
     cmd_payload = command.get("payload")
     cmd_type = command.get("commandType")
     
-    print(f"[Agent] Executing command [{cmd_id}]: {cmd_type} - {cmd_payload}")
+    # Support both string payload and dict payload {"cmd": "..."}
+    if isinstance(cmd_payload, dict):
+        cmd_str = cmd_payload.get("cmd", "")
+    else:
+        cmd_str = str(cmd_payload) if cmd_payload else ""
+    
+    print(f"[Agent] Executing command [{cmd_id}]: {cmd_type} -> {cmd_str}")
     
     result_log = ""
     status = "SUCCESS"
@@ -232,7 +271,7 @@ def execute_command(command):
     try:
         # Run command tightly capturing stdout and stderr
         process = subprocess.run(
-            cmd_payload, 
+            cmd_str, 
             shell=True, 
             stdout=subprocess.PIPE, 
             stderr=subprocess.STDOUT, 

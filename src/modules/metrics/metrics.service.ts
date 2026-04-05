@@ -59,6 +59,14 @@ export class MetricsService {
 
         const savedMetric = await this.metricRepository.save(metric);
 
+        // Save top processes snapshot to server entity
+        if (pushMetricDto.topProcesses && pushMetricDto.topProcesses.length > 0) {
+            await this.serversService.updateTopProcesses(
+                server.id,
+                pushMetricDto.topProcesses,
+            );
+        }
+
         this.checkAlerts(server, pushMetricDto).catch((err) =>
             console.error('Error checking alerts:', err),
         );

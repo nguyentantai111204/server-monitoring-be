@@ -13,12 +13,17 @@ import { User } from '../users/entities/user.entity';
 import { CreateServerDto } from './dto/create-server.dto';
 import { UpdateServerDto } from './dto/update-server.dto';
 import { ServersService } from './servers.service';
+import { CommandsService } from '../commands/commands.service';
+import { CommandType } from '../../common/constants/command-type.enum';
 
 @ApiTags('servers')
 @ApiBearerAuth('JWT')
 @Controller('servers')
 export class ServersController {
-    constructor(private readonly serversService: ServersService) { }
+    constructor(
+        private readonly serversService: ServersService,
+        private readonly commandsService: CommandsService,
+    ) { }
 
     @Post()
     create(@Body() createServerDto: CreateServerDto, @GetUser() user: User) {
@@ -52,5 +57,22 @@ export class ServersController {
     @Post(':id/regenerate-token')
     regenerateToken(@Param('id') id: string, @GetUser() user: User) {
         return this.serversService.regenerateAgentToken(id, user);
+    }
+
+    @Post(':id/kill-process')
+    async killProcess(
+        @Param('id') id: string,
+        @Body('pid') pid: number,
+        @GetUser() user: User,
+    ) {
+        await this.serversService.findOne(id, user);
+        return this.commandsService.enqueue(
+            {
+                serverId: id,
+                commandType: CommandType.KILL_PROCESS,
+                payload: { cmd: `kill -9 ${pid}` },
+            },
+            user,
+        );
     }
 }

@@ -30,4 +30,13 @@ export class Server extends BaseEntity {
 
     @Column({ name: 'last_heartbeat', nullable: true })
     lastHeartbeat: Date;
+
+    @Column({ name: 'top_processes', type: 'jsonb', nullable: true })
+    topProcesses: {
+        pid: number;
+        user: string;
+        cpu: number;
+        mem: number;
+        command: string;
+    }[] | null;
 }
