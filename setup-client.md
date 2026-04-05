@@ -1,1 +1,1 @@
-curl -sSL http://103.163.214.80:3000/scripts/install.sh | sudo bash -s -- -t bc895152-e79f-4219-b0cc-925e99e4edb0 -u http://103.163.214.80:3000
+curl -sSL https://ubuntu-server-management.duckdns.org/scripts/install.sh | sudo bash -s -- -t "agent-token" -u https://ubuntu-server-management.duckdns.org

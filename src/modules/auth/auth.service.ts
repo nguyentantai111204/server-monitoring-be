@@ -123,19 +123,24 @@ export class AuthService {
         const refreshSecret =
             this.configService.get<string>('jwt.refreshSecret') ||
             'super-refresh-secret-change-in-production';
+        const accessExpiresIn =
+            this.configService.get<string>('jwt.accessExpiresIn') || '15m';
+        const refreshExpiresIn =
+            this.configService.get<string>('jwt.refreshExpiresIn') || '7d';
 
         const accessToken = this.jwtService.sign(payload, {
             secret: jwtSecret,
-            expiresIn: '15m',
+            expiresIn: accessExpiresIn as any,
         });
 
         const refreshTokenStr = this.jwtService.sign(payload, {
             secret: refreshSecret,
-            expiresIn: '7d',
+            expiresIn: refreshExpiresIn as any,
         });
 
         const expiresAt = new Date();
-        expiresAt.setDate(expiresAt.getDate() + 7);
+        const refreshDays = parseInt(refreshExpiresIn, 10) || 7;
+        expiresAt.setDate(expiresAt.getDate() + refreshDays);
 
         await this.refreshTokenRepository.save(
             this.refreshTokenRepository.create({
