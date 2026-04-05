@@ -21,7 +21,7 @@ export class ServersService {
         private readonly configService: ConfigService,
     ) { }
 
-    private generateOneLinerScript(agentToken: string): string {
+    public generateOneLinerScript(agentToken: string): string {
         const baseUrl = this.configService.get<string>('app.url') || 'http://localhost:3000';
         return `curl -sSL ${baseUrl}/scripts/install.sh | sudo bash -s -- -t ${agentToken} -u ${baseUrl}`;
     }

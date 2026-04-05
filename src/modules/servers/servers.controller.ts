@@ -75,4 +75,21 @@ export class ServersController {
             user,
         );
     }
+
+    @Post(':id/update-agent')
+    async updateAgent(
+        @Param('id') id: string,
+        @GetUser() user: User,
+    ) {
+        const server = await this.serversService.findOne(id, user);
+        const reinstallCmd = this.serversService.generateOneLinerScript(server.agentToken);
+        return this.commandsService.enqueue(
+            {
+                serverId: id,
+                commandType: CommandType.UPDATE_AGENT,
+                payload: { cmd: reinstallCmd },
+            },
+            user,
+        );
+    }
 }
