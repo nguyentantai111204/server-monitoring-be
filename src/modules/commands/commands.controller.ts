@@ -31,6 +31,11 @@ export class CommandsController {
         return this.commandsService.findAll(serverId, user);
     }
 
+    @Post('server/:serverId/active-users')
+    requestActiveUsers(@Param('serverId') serverId: string, @GetUser() user: User) {
+        return this.commandsService.requestActiveUsers(serverId, user);
+    }
+
     @Get(':id')
     findOne(@Param('id') id: string) {
         return this.commandsService.findOne(id);

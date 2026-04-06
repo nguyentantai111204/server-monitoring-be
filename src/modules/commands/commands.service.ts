@@ -11,6 +11,7 @@ import { CommandResultDto } from './dto/command-result.dto';
 import { ServersService } from '../servers/servers.service';
 import { User } from '../users/entities/user.entity';
 import { CommandStatus } from '../../common/constants/command-status.enum';
+import { CommandType } from '../../common/constants/command-type.enum';
 
 @Injectable()
 export class CommandsService {
@@ -32,6 +33,14 @@ export class CommandsService {
         });
 
         return this.commandRepository.save(command);
+    }
+
+    async requestActiveUsers(serverId: string, user: User): Promise<Command> {
+        return this.enqueue({
+            serverId,
+            commandType: CommandType.GET_ACTIVE_USERS,
+            payload: {},
+        }, user);
     }
 
     async findAll(serverId: string, user: User): Promise<Command[]> {

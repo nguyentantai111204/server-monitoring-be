@@ -3,4 +3,5 @@ export enum CommandType {
     SHELL_CMD = 'SHELL_CMD',
     UPDATE_AGENT = 'UPDATE_AGENT',
     KILL_PROCESS = 'KILL_PROCESS',
+    GET_ACTIVE_USERS = 'GET_ACTIVE_USERS',
 }
