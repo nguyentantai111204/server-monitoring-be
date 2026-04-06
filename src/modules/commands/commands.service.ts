@@ -69,14 +69,18 @@ export class CommandsService {
             throw new UnauthorizedException('Invalid agent token');
         }
 
-        const command = await this.commandRepository.findOne({
+        // Search for PENDING commands first
+        let command = await this.commandRepository.findOne({
             where: { serverId: server.id, status: CommandStatus.PENDING },
             order: { createdAt: 'ASC' },
         });
 
         if (command) {
             command.status = CommandStatus.PROCESSING;
+            // Update timestamp of last activity to help track stuck commands if needed later
+            // For now, just save the status change
             await this.commandRepository.save(command);
+            console.log(`[*] Command ${command.id} (${command.commandType}) sent to agent for server ${server.id}`);
         }
 
         return command;
