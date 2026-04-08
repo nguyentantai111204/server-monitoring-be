@@ -4,7 +4,7 @@ import {
     UnauthorizedException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, LessThan, Repository } from 'typeorm';
 import { Command } from './entities/command.entity';
 import { ExecuteCommandDto } from './dto/execute-command.dto';
 import { CommandResultDto } from './dto/command-result.dto';
@@ -70,15 +70,20 @@ export class CommandsService {
         }
 
         // Search for PENDING commands first
+        const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
+        
         let command = await this.commandRepository.findOne({
-            where: { serverId: server.id, status: CommandStatus.PENDING },
+            where: [
+                { serverId: server.id, status: CommandStatus.PENDING },
+                { serverId: server.id, status: CommandStatus.PROCESSING, updatedAt: LessThan(twoMinutesAgo) }
+            ],
             order: { createdAt: 'ASC' },
         });
 
         if (command) {
             command.status = CommandStatus.PROCESSING;
-            // Update timestamp of last activity to help track stuck commands if needed later
-            // For now, just save the status change
+            // Update timestamp to mark it as just starting/retrying
+            command.updatedAt = new Date();
             await this.commandRepository.save(command);
             console.log(`[*] Command ${command.id} (${command.commandType}) sent to agent for server ${server.id}`);
         }
