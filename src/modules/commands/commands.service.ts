@@ -111,6 +111,7 @@ export class CommandsService {
         command.status = resultDto.status;
         command.resultLog = resultDto.resultLog || '';
 
+        console.log(`[+] Result for command ${commandId} submitted by agent for server ${server.id}: ${command.status}`);
         return this.commandRepository.save(command);
     }
 }
