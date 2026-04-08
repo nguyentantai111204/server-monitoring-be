@@ -21,9 +21,13 @@ export class ServersService {
         private readonly configService: ConfigService,
     ) { }
 
-    public generateOneLinerScript(agentToken: string): string {
+    public generateOneLinerScript(agentToken: string, ipAddress?: string): string {
         const baseUrl = this.configService.get<string>('app.url') || 'http://localhost:3000';
-        return `curl -sSL ${baseUrl}/scripts/install.sh | sudo bash -s -- -t ${agentToken} -u ${baseUrl}`;
+        let script = `curl -sSL ${baseUrl}/scripts/install.sh | sudo bash -s -- -t ${agentToken} -u ${baseUrl}`;
+        if (ipAddress) {
+            script += ` -ip ${ipAddress}`;
+        }
+        return script;
     }
 
     async create(
@@ -41,7 +45,7 @@ export class ServersService {
         const savedServer = await this.serverRepository.save(server);
         return {
             ...savedServer,
-            oneLinerScript: this.generateOneLinerScript(agentToken),
+            oneLinerScript: this.generateOneLinerScript(agentToken, createServerDto.ipAddress),
         };
     }
 
@@ -103,7 +107,7 @@ export class ServersService {
 
         return {
             ...savedServer,
-            oneLinerScript: this.generateOneLinerScript(agentToken),
+            oneLinerScript: this.generateOneLinerScript(agentToken, server.ipAddress),
         };
     }
 

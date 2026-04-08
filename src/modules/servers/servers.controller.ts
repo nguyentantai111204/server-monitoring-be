@@ -82,7 +82,7 @@ export class ServersController {
         @GetUser() user: User,
     ) {
         const server = await this.serversService.findOne(id, user);
-        const reinstallCmd = this.serversService.generateOneLinerScript(server.agentToken);
+        const reinstallCmd = this.serversService.generateOneLinerScript(server.agentToken, server.ipAddress);
         return this.commandsService.enqueue(
             {
                 serverId: id,
