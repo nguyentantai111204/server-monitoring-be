@@ -12,6 +12,7 @@ import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { CreateServerDto } from './dto/create-server.dto';
 import { UpdateServerDto } from './dto/update-server.dto';
+import { VerifyServerPasswordDto } from './dto/verify-server-password.dto';
 import { ServersService } from './servers.service';
 import { CommandsService } from '../commands/commands.service';
 import { CommandType } from '../../common/constants/command-type.enum';
@@ -26,8 +27,8 @@ export class ServersController {
     ) { }
 
     @Post()
-    create(@Body() createServerDto: CreateServerDto, @GetUser() user: User) {
-        return this.serversService.create(createServerDto, user);
+    create(@Body() dto: CreateServerDto, @GetUser() user: User) {
+        return this.serversService.create(dto, user);
     }
 
     @Get()
@@ -43,10 +44,10 @@ export class ServersController {
     @Patch(':id')
     update(
         @Param('id') id: string,
-        @Body() updateServerDto: UpdateServerDto,
+        @Body() dto: UpdateServerDto,
         @GetUser() user: User,
     ) {
-        return this.serversService.update(id, updateServerDto, user);
+        return this.serversService.update(id, dto, user);
     }
 
     @Delete(':id')
@@ -54,10 +55,22 @@ export class ServersController {
         return this.serversService.remove(id, user);
     }
 
-    @Post(':id/regenerate-token')
-    regenerateToken(@Param('id') id: string, @GetUser() user: User) {
-        return this.serversService.regenerateAgentToken(id, user);
+    // ─── Sensitive Data Access ──────────────────────────────────────────────────
+
+    /**
+     * Verify the server password and return the agent token + install script.
+     * Returns 401 if password is wrong.
+     */
+    @Post(':id/verify-password')
+    verifyPassword(
+        @Param('id') id: string,
+        @Body() dto: VerifyServerPasswordDto,
+        @GetUser() user: User,
+    ) {
+        return this.serversService.verifyPasswordAndGetSecrets(id, dto.password, user);
     }
+
+    // ─── Agent Actions ────────────────────────────────────────────────────────
 
     @Post(':id/kill-process')
     async killProcess(
@@ -81,13 +94,14 @@ export class ServersController {
         @Param('id') id: string,
         @GetUser() user: User,
     ) {
-        const server = await this.serversService.findOne(id, user);
-        const reinstallCmd = this.serversService.generateOneLinerScript(server.agentToken, server.ipAddress);
+        // Get secrets via password verification is not needed here — this is a
+        // trusted backend action (not user-visible), so we fetch secrets directly.
+        const secrets = await this.serversService.verifyPasswordAndGetSecretsForSystem(id, user);
         return this.commandsService.enqueue(
             {
                 serverId: id,
                 commandType: CommandType.UPDATE_AGENT,
-                payload: { cmd: reinstallCmd },
+                payload: { cmd: secrets.oneLinerScript },
             },
             user,
         );

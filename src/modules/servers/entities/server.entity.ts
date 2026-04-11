@@ -18,8 +18,11 @@ export class Server extends BaseEntity {
     @Column({ name: 'ip_address', length: 100, nullable: true })
     ipAddress: string;
 
-    @Column({ name: 'agent_token', unique: true })
+    @Column({ name: 'agent_token', unique: true, select: false })
     agentToken: string;
+
+    @Column({ name: 'agent_password_hash', select: false })
+    agentPasswordHash: string;
 
     @Column({
         type: 'enum',
