@@ -7,7 +7,8 @@ import {
     Patch,
     Post,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { Public } from '../../common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { CreateServerDto } from './dto/create-server.dto';
@@ -34,6 +35,13 @@ export class ServersController {
     @Get()
     findAll(@GetUser() user: User) {
         return this.serversService.findAll(user);
+    }
+
+    @Public()
+    @ApiOperation({ summary: 'List all servers (no auth required)' })
+    @Get('public')
+    findAllPublic() {
+        return this.serversService.findAllPublic();
     }
 
     @Get(':id')

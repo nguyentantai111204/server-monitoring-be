@@ -15,7 +15,6 @@ import { UpdateServerDto } from './dto/update-server.dto';
 import { User } from '../users/entities/user.entity';
 import { UserRole } from '../../common/constants/user-role.enum';
 
-// Number of bcrypt salt rounds — 10 is a good default
 const SALT_ROUNDS = 10;
 
 @Injectable()
@@ -26,7 +25,6 @@ export class ServersService {
         private readonly configService: ConfigService,
     ) { }
 
-    // ─── Helpers ────────────────────────────────────────────────────────────────
 
     public generateOneLinerScript(agentToken: string, ipAddress?: string): string {
         const baseUrl = this.configService.get<string>('app.url') || 'http://localhost:3000';
@@ -70,8 +68,11 @@ export class ServersService {
             agentPasswordHash,
         });
 
-        // Return just the server record — token is NOT included in normal responses
         return this.serverRepository.save(server);
+    }
+
+    async findAllPublic(): Promise<Server[]> {
+        return this.serverRepository.find({ relations: ['owner'] });
     }
 
     async findAll(user: User): Promise<Server[]> {
@@ -125,12 +126,6 @@ export class ServersService {
         await this.serverRepository.remove(server);
     }
 
-    // ─── Sensitive Data Access ────────────────────────────────────────────────
-
-    /**
-     * Verify the server password and, on success, return the agent token
-     * and the one-liner install script. Throws UnauthorizedException on wrong password.
-     */
     async verifyPasswordAndGetSecrets(
         id: string,
         password: string,
@@ -153,10 +148,6 @@ export class ServersService {
         };
     }
 
-    /**
-     * Internal system use only — bypasses password check but still validates ownership.
-     * Used for actions like Update Agent where the backend itself needs the token.
-     */
     async verifyPasswordAndGetSecretsForSystem(
         id: string,
         user: User,
@@ -171,7 +162,6 @@ export class ServersService {
     }
 
 
-    // ─── Token Regeneration ───────────────────────────────────────────────────
 
     async regenerateAgentToken(
         id: string,
@@ -183,7 +173,6 @@ export class ServersService {
         return this.serverRepository.save(server);
     }
 
-    // ─── Agent Callbacks ──────────────────────────────────────────────────────
 
     async updateStatus(server: Server, status: any): Promise<Server> {
         server.status = status;
