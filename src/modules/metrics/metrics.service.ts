@@ -1,6 +1,6 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, LessThan, Repository } from 'typeorm';
+import { Between, In, LessThan, Not, Repository } from 'typeorm';
 import { Cron } from '@nestjs/schedule';
 import { Metric } from './entities/metric.entity';
 import { PushMetricDto } from './dto/push-metric.dto';
@@ -146,12 +146,38 @@ export class MetricsService {
         timeLimit.setMinutes(timeLimit.getMinutes() - retentionMinutes);
 
         try {
-            const result = await this.metricRepository.delete({
-                timestamp: LessThan(timeLimit),
-            });
+            // Lấy danh sách các Server ID đang có metrics trong DB
+            const distinctServers = await this.metricRepository
+                .createQueryBuilder('metric')
+                .select('metric.serverId', 'serverId')
+                .distinct(true)
+                .getRawMany();
 
-            if (result.affected && result.affected > 0) {
-                this.logger.log(`[Data Retention Demo] Cleaned up ${result.affected} old metrics records.`);
+            let totalDeleted = 0;
+
+            for (const { serverId } of distinctServers) {
+                // Lấy ra ID của 20 records mới nhất của server này để giữ lại
+                const topMetrics = await this.metricRepository.find({
+                    where: { serverId },
+                    order: { timestamp: 'DESC' },
+                    take: 20,
+                    select: ['id'],
+                });
+
+                const idsToKeep = topMetrics.map(m => m.id);
+
+                if (idsToKeep.length > 0) {
+                    const result = await this.metricRepository.delete({
+                        serverId,
+                        timestamp: LessThan(timeLimit),
+                        id: Not(In(idsToKeep)), // Không nằm trong top 20 mới nhất
+                    });
+                    totalDeleted += (result.affected || 0);
+                }
+            }
+
+            if (totalDeleted > 0) {
+                this.logger.log(`[Data Retention Demo] Cleaned up ${totalDeleted} old metrics records, keeping newest 20 per server.`);
             }
         } catch (error) {
             this.logger.error('Failed to cleanup old metrics:', error);
