@@ -8,7 +8,6 @@ interface FailEntry {
 const MAX_FAILURES = 10;
 const BLOCK_DURATION_MIN = 30;
 
-// Comma-separated list of IPs that are never blocked (e.g. "127.0.0.1,::1,192.168.1.1")
 const WHITELISTED_IPS: Set<string> = new Set(
     (process.env.AGENT_IP_WHITELIST ?? '127.0.0.1,::1,::ffff:127.0.0.1')
         .split(',')
@@ -21,7 +20,6 @@ export class IpBlocklistService {
     private readonly logger = new Logger(IpBlocklistService.name);
     private readonly attempts = new Map<string, FailEntry>();
 
-    /** Returns the Date it will unblock, or null if not blocked / whitelisted */
     getBlockedUntil(ip: string): Date | null {
         if (WHITELISTED_IPS.has(ip)) return null;
 
@@ -65,7 +63,6 @@ export class IpBlocklistService {
         this.attempts.set(ip, entry);
     }
 
-    /** Call on successful auth to immediately reset the counter */
     resetFailures(ip: string): void {
         if (this.attempts.has(ip)) {
             this.logger.debug(`[IpBlocklist] Counter reset for IP ${ip} after successful auth`);

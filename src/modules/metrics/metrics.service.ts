@@ -1,6 +1,7 @@
 import { Injectable, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Between, Repository } from 'typeorm';
+import { Between, LessThan, Repository } from 'typeorm';
+import { Cron } from '@nestjs/schedule';
 import { Metric } from './entities/metric.entity';
 import { PushMetricDto } from './dto/push-metric.dto';
 import { QueryMetricDto } from './dto/query-metric.dto';
@@ -134,6 +135,26 @@ export class MetricsService {
                     rule.threshold,
                 );
             }
+        }
+    }
+
+    // @Cron(process.env.METRICS_CRON_SCHEDULE || '*/5 * * * *')
+    @Cron('*/5 * * * *')
+    async cleanupOldMetrics() {
+        const retentionMinutes = parseInt(process.env.METRICS_RETENTION_MINUTES || '5', 10);
+        const timeLimit = new Date();
+        timeLimit.setMinutes(timeLimit.getMinutes() - retentionMinutes);
+
+        try {
+            const result = await this.metricRepository.delete({
+                timestamp: LessThan(timeLimit),
+            });
+
+            if (result.affected && result.affected > 0) {
+                this.logger.log(`[Data Retention Demo] Cleaned up ${result.affected} old metrics records.`);
+            }
+        } catch (error) {
+            this.logger.error('Failed to cleanup old metrics:', error);
         }
     }
 }

@@ -10,12 +10,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 import { IpBlocklistService } from '../services/ip-blocklist.service';
 
-/**
- * Apply to agent-facing public endpoints.
- * - Blocks IPs that have been flagged by IpBlocklistService
- * - Records a failure when the handler throws UnauthorizedException
- * - Resets the failure counter on success
- */
+
 @Injectable()
 export class AgentAuthInterceptor implements NestInterceptor {
     constructor(private readonly ipBlocklistService: IpBlocklistService) {}
