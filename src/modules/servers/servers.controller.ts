@@ -59,8 +59,12 @@ export class ServersController {
     }
 
     @Delete(':id')
-    remove(@Param('id') id: string, @GetUser() user: User) {
-        return this.serversService.remove(id, user);
+    remove(
+        @Param('id') id: string,
+        @Body() dto: VerifyServerPasswordDto,
+        @GetUser() user: User,
+    ) {
+        return this.serversService.remove(id, dto.password, user);
     }
 
     // ─── Sensitive Data Access ──────────────────────────────────────────────────

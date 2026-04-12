@@ -6,6 +6,7 @@ import {
     Param,
     Post,
     Put,
+    UseInterceptors,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiSecurity, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
@@ -14,6 +15,7 @@ import { User } from '../users/entities/user.entity';
 import { CommandsService } from './commands.service';
 import { CommandResultDto } from './dto/command-result.dto';
 import { ExecuteCommandDto } from './dto/execute-command.dto';
+import { AgentAuthInterceptor } from '../../common/interceptors/agent-auth.interceptor';
 
 @ApiTags('commands')
 @ApiBearerAuth('JWT')
@@ -43,6 +45,7 @@ export class CommandsController {
 
     @Public()
     @ApiSecurity('Agent-Token')
+    @UseInterceptors(AgentAuthInterceptor)
     @Get('agent/poll')
     pollNext(@Headers('x-agent-token') agentToken: string) {
         return this.commandsService.pollNextCommand(agentToken);
@@ -50,6 +53,7 @@ export class CommandsController {
 
     @Public()
     @ApiSecurity('Agent-Token')
+    @UseInterceptors(AgentAuthInterceptor)
     @Put('agent/:commandId/result')
     submitResult(
         @Param('commandId') commandId: string,

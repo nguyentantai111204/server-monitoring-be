@@ -121,9 +121,14 @@ export class ServersService {
         return this.serverRepository.save(server);
     }
 
-    async remove(id: string, user: User): Promise<void> {
-        const server = await this.findOne(id, user);
-        await this.serverRepository.remove(server);
+    async remove(id: string, password: string, user: User): Promise<void> {
+        await this.findOne(id, user);
+        const serverWithSecrets = await this.findOneWithSecrets(id);
+        const isPasswordCorrect = await bcrypt.compare(password, serverWithSecrets.agentPasswordHash);
+        if (!isPasswordCorrect) {
+            throw new UnauthorizedException('Incorrect server password');
+        }
+        await this.serverRepository.remove(serverWithSecrets);
     }
 
     async verifyPasswordAndGetSecrets(

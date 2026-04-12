@@ -6,6 +6,8 @@ import { MetricsService } from './metrics.service';
 import { ServersModule } from '../servers/servers.module';
 import { AlertsModule } from '../alerts/alerts.module';
 import { TelegramModule } from '../../providers/telegram/telegram.module';
+import { IpBlocklistService } from '../../common/services/ip-blocklist.service';
+import { AgentAuthInterceptor } from '../../common/interceptors/agent-auth.interceptor';
 
 @Module({
     imports: [
@@ -15,7 +17,7 @@ import { TelegramModule } from '../../providers/telegram/telegram.module';
         TelegramModule,
     ],
     controllers: [MetricsController],
-    providers: [MetricsService],
+    providers: [MetricsService, IpBlocklistService, AgentAuthInterceptor],
     exports: [MetricsService],
 })
 export class MetricsModule { }
