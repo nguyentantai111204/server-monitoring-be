@@ -15,6 +15,7 @@ import { Roles } from '../../common/decorators/roles.decorator';
 import { UserRole } from '../../common/constants/user-role.enum';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { UsersService } from './users.service';
 
 @ApiTags('users')
@@ -32,6 +33,15 @@ export class UsersController {
     @Patch('me')
     updateProfile(@GetUser() user: { id: string }, @Body() updateUserDto: UpdateUserDto) {
         return this.usersService.update(user.id, updateUserDto);
+    }
+
+    @Post('me/change-password')
+    async changePassword(
+        @GetUser() user: { id: string },
+        @Body() dto: ChangePasswordDto,
+    ) {
+        await this.usersService.changePassword(user.id, dto.oldPassword, dto.newPassword);
+        return { message: 'Password changed successfully' };
     }
 
     @Post()

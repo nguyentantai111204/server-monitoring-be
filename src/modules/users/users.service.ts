@@ -76,6 +76,21 @@ export class UsersService {
         return this.userRepository.save(user);
     }
 
+    async changePassword(id: string, oldPassword: string, newPassword: string): Promise<void> {
+        const user = await this.userRepository.findOne({ where: { id } });
+        if (!user) {
+            throw new NotFoundException('User not found');
+        }
+
+        const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
+        if (!isMatch) {
+            throw new ConflictException('Incorrect old password');
+        }
+
+        user.passwordHash = await bcrypt.hash(newPassword, 12);
+        await this.userRepository.save(user);
+    }
+
     async remove(id: string): Promise<void> {
         const user = await this.findOne(id);
         await this.userRepository.remove(user);

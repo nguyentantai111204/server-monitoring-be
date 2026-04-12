@@ -67,12 +67,7 @@ export class ServersController {
         return this.serversService.remove(id, dto.password, user);
     }
 
-    // ─── Sensitive Data Access ──────────────────────────────────────────────────
 
-    /**
-     * Verify the server password and return the agent token + install script.
-     * Returns 401 if password is wrong.
-     */
     @Post(':id/verify-password')
     verifyPassword(
         @Param('id') id: string,
@@ -82,7 +77,6 @@ export class ServersController {
         return this.serversService.verifyPasswordAndGetSecrets(id, dto.password, user);
     }
 
-    // ─── Agent Actions ────────────────────────────────────────────────────────
 
     @Post(':id/kill-process')
     async killProcess(
@@ -106,8 +100,6 @@ export class ServersController {
         @Param('id') id: string,
         @GetUser() user: User,
     ) {
-        // Get secrets via password verification is not needed here — this is a
-        // trusted backend action (not user-visible), so we fetch secrets directly.
         const secrets = await this.serversService.verifyPasswordAndGetSecretsForSystem(id, user);
         return this.commandsService.enqueue(
             {

@@ -61,13 +61,17 @@ export class AuthService {
     }
 
     async refreshTokens(refreshTokenStr: string): Promise<TokenPair> {
+        if (!refreshTokenStr) {
+            throw new UnauthorizedException('Refresh token is missing');
+        }
+
         try {
             const refreshSecret =
                 this.configService.get<string>('jwt.refreshSecret') ||
                 'super-refresh-secret-change-in-production';
-            
+
             await this.jwtService.verifyAsync(refreshTokenStr, {
-                secret: refreshSecret,
+                secret: refreshSecret, 
             });
         } catch (error) {
             throw new UnauthorizedException('Invalid or expired refresh token signature');

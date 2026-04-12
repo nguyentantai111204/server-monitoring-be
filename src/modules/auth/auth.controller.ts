@@ -1,5 +1,5 @@
-import { Body, Controller, Headers, Post, UseGuards, Res } from '@nestjs/common';
-import type { Response } from 'express';
+import { Body, Controller, Headers, Post, UseGuards, Res, Req } from '@nestjs/common';
+import type { Request, Response } from 'express';
 import { ApiBearerAuth, ApiHeader, ApiTags } from '@nestjs/swagger';
 import { Public } from '../../common/decorators/public.decorator';
 import { GetUser } from '../../common/decorators/get-user.decorator';
@@ -60,11 +60,12 @@ export class AuthController {
     @Public()
     @Post('refresh')
     async refreshTokens(
-        @Body('refreshToken') bodyToken: string,
+        @Req() req: Request,
         @Res({ passthrough: true }) res: Response,
-        @Headers('cookie') cookies?: any
+        @Body('refreshToken') bodyToken?: string,
     ) {
-        const tokens = await this.authService.refreshTokens(bodyToken);
+        const refreshToken = bodyToken || req.cookies?.refreshToken;
+        const tokens = await this.authService.refreshTokens(refreshToken);
         this.setAuthCookies(res, tokens.accessToken, tokens.refreshToken);
         return tokens;
     }
@@ -73,10 +74,14 @@ export class AuthController {
     @Post('logout')
     @UseGuards(JwtAuthGuard)
     async logout(
-        @Body('refreshToken') bodyToken: string,
-        @Res({ passthrough: true }) res: Response
+        @Req() req: Request,
+        @Res({ passthrough: true }) res: Response,
+        @Body('refreshToken') bodyToken?: string,
     ) {
-        await this.authService.logout(bodyToken);
+        const refreshToken = bodyToken || req.cookies?.refreshToken;
+        if (refreshToken) {
+            await this.authService.logout(refreshToken);
+        }
         this.clearAuthCookies(res);
         return { message: 'Logged out successfully' };
     }

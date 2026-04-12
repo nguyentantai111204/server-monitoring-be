@@ -35,7 +35,6 @@ export class ServersService {
         return script;
     }
 
-    // Fetch a server WITH the sensitive fields that are excluded by default (select: false)
     private async findOneWithSecrets(id: string): Promise<Server> {
         const server = await this.serverRepository
             .createQueryBuilder('server')
@@ -51,7 +50,6 @@ export class ServersService {
         return server;
     }
 
-    // ─── Core CRUD ───────────────────────────────────────────────────────────────
 
     async create(
         dto: CreateServerDto,
@@ -136,10 +134,8 @@ export class ServersService {
         password: string,
         user: User,
     ): Promise<{ agentToken: string; oneLinerScript: string }> {
-        // Ensure the user is authorized to access this server
         await this.findOne(id, user);
 
-        // Fetch the row again with the sensitive fields
         const serverWithSecrets = await this.findOneWithSecrets(id);
 
         const isPasswordCorrect = await bcrypt.compare(password, serverWithSecrets.agentPasswordHash);
