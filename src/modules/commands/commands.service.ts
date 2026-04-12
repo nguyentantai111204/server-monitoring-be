@@ -71,7 +71,7 @@ export class CommandsService {
 
         // Search for PENDING commands first
         const twoMinutesAgo = new Date(Date.now() - 2 * 60 * 1000);
-        
+
         let command = await this.commandRepository.findOne({
             where: [
                 { serverId: server.id, status: CommandStatus.PENDING },
@@ -82,7 +82,12 @@ export class CommandsService {
 
         if (command) {
             command.status = CommandStatus.PROCESSING;
-            // Update timestamp to mark it as just starting/retrying
+
+            if (command.commandType === CommandType.UPDATE_AGENT) {
+                command.status = CommandStatus.SUCCESS;
+                command.resultLog = 'Command sent; Agent will restart.';
+            }
+
             command.updatedAt = new Date();
             await this.commandRepository.save(command);
             console.log(`[*] Command ${command.id} (${command.commandType}) sent to agent for server ${server.id}`);
